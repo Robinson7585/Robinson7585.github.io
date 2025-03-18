@@ -1,0 +1,19 @@
+<?php
+session_start();
+include('database.php');
+
+if (isset($_GET['id'])) {
+    $id = $_GET['id'];
+
+    $sql = "SELECT * FROM items WHERE id = $id";
+    $result = $conn->query($sql);
+    $item = $result->fetch_assoc();
+
+    if (!isset($_SESSION['cart'])) {
+        $_SESSION['cart'] = array();
+    }
+
+    $_SESSION['cart'][] = $item;
+    header("Location: cart.php");
+}
+?>
