@@ -1,0 +1,17 @@
+<?php
+include('database.php');
+
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    $item_name = $_POST['item_name'];
+    $price = $_POST['price'];
+
+    $sql = "INSERT INTO items (item_name, price) VALUES ('$item_name', '$price')";
+    if ($conn->query($sql) === TRUE) {
+        header("Location: admin.php");
+    } else {
+        echo "Error: " . $sql . "<br>" . $conn->error;
+    }
+}
+
+$conn->close();
+?>
