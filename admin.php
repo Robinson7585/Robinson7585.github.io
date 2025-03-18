@@ -1,7 +1,7 @@
 <?php
 // Database connection (Replace these variables with your actual DB credentials)
 $host = 'localhost';
-$db = 'your_database';
+$db = 'YAHWEH7\SQLEXPRESS;
 $user = 'your_username';
 $pass = 'your_password';
 
