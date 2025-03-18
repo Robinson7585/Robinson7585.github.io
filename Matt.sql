@@ -1,3 +1,14 @@
+DROP DATABASE IF EXISTS `Bookstore`;
+CREATE DATABASE `Bookstore`;
+USE `Bookstore`;
+
+
+
+
+
+
+
+
 CREATE TABLE Users (
     user_id INT PRIMARY KEY AUTO_INCREMENT,
     first_name VARCHAR(100) NOT NULL,
