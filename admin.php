@@ -1,15 +1,16 @@
 <?php
-// Database connection (Replace these variables with your actual DB credentials)
-$host = 'localhost';
-$db = 'YAHWEH7\SQLEXPRESS;
-$user = 'your_username';
-$pass = 'your_password';
+// Database connection settings
+$serverName = "YAHWEH7\SQLEXPRESS"; // Your SQL Server instance name
+$connectionOptions = array(
+    "Database" => "your_database_name", // Replace with your actual database name
+    "Uid" => "your_username", // Your SQL username
+    "PWD" => "your_password" // Your SQL password
+);
 
-try {
-    $pdo = new PDO("mysql:host=$host;dbname=$db", $user, $pass);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-} catch (PDOException $e) {
-    die("Could not connect to the database: " . $e->getMessage());
+// Establishes the connection
+$conn = sqlsrv_connect($serverName, $connectionOptions);
+if ($conn === false) {
+    die(print_r(sqlsrv_errors(), true));
 }
 
 // Add new book functionality
@@ -18,20 +19,25 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add'])) {
     $author = $_POST['author'];
     $price = $_POST['price'];
 
-    // Insert new book into the database
-    $sql = "INSERT INTO books (name, author, price) VALUES (:name, :author, :price)";
-    $stmt = $pdo->prepare($sql);
-    $stmt->execute(['name' => $name, 'author' => $author, 'price' => $price]);
+    $sql = "INSERT INTO Books (name, author, price) VALUES (?, ?, ?)";
+    $params = array($name, $author, $price);
+    $stmt = sqlsrv_query($conn, $sql, $params);
+
+    if ($stmt === false) {
+        die(print_r(sqlsrv_errors(), true));
+    }
 }
 
 // Delete a book functionality
 if (isset($_GET['delete'])) {
     $id = $_GET['delete'];
 
-    // Delete book from the database
-    $sql = "DELETE FROM books WHERE id = :id";
-    $stmt = $pdo->prepare($sql);
-    $stmt->execute(['id' => $id]);
+    $sql = "DELETE FROM Books WHERE id = ?";
+    $stmt = sqlsrv_query($conn, $sql, array($id));
+
+    if ($stmt === false) {
+        die(print_r(sqlsrv_errors(), true));
+    }
 }
 
 // Modify book name and price functionality
@@ -40,11 +46,17 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['modify'])) {
     $newName = $_POST['newName'];
     $newPrice = $_POST['newPrice'];
 
-    // Update book name and price
-    $sql = "UPDATE books SET name = :newName, price = :newPrice WHERE id = :id";
-    $stmt = $pdo->prepare($sql);
-    $stmt->execute(['newName' => $newName, 'newPrice' => $newPrice, 'id' => $id]);
+    $sql = "UPDATE Books SET name = ?, price = ? WHERE id = ?";
+    $stmt = sqlsrv_query($conn, $sql, array($newName, $newPrice, $id));
+
+    if ($stmt === false) {
+        die(print_r(sqlsrv_errors(), true));
+    }
 }
+
+// Fetch all books
+$sql = "SELECT * FROM Books";
+$query = sqlsrv_query($conn, $sql);
 ?>
 
 <!DOCTYPE html>
@@ -52,7 +64,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['modify'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Page</title>
+    <title>Admin Page - Book Management</title>
 </head>
 <body>
 
@@ -92,7 +104,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['modify'])) {
 
     <hr>
 
-    <!-- Book List with Delete Options -->
+    <!-- Existing Books List -->
     <h2>Existing Books</h2>
     <table border="1">
         <tr>
@@ -100,14 +112,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['modify'])) {
             <th>Name</th>
             <th>Author</th>
             <th>Price</th>
-            <th>Action</th>
+            <th>Actions</th>
         </tr>
 
         <?php
-        // Fetch and display books from the database
-        $sql = "SELECT * FROM books";
-        $stmt = $pdo->query($sql);
-        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+        while ($row = sqlsrv_fetch_array($query, SQLSRV_FETCH_ASSOC)) {
             echo "<tr>
                     <td>{$row['id']}</td>
                     <td>{$row['name']}</td>
@@ -121,3 +130,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['modify'])) {
 
 </body>
 </html>
+
+<?php
+// Close the database connection
+sqlsrv_close($conn);
+?>
